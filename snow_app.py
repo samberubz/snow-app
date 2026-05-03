@@ -21,6 +21,14 @@ MOUNTAINS = {
     "Sainte-Anne": (47.0756, -70.9069),
     "Bromont":     (45.3167, -72.6500),
 }
+
+# Regional groupings for the snow recap
+REGIONS = {
+    "Estrie":      ["Sutton", "Orford", "Bromont"],
+    "Laurentides": ["Tremblant"],
+    "East":        ["Stoneham", "Sainte-Anne"],
+}
+RECAP_HOURS = 48  # window for the recap line
 WINDOWS = {"6 h": 6, "12 h": 12, "18 h": 18, "24 h": 24, "48 h": 48, "72 h": 72}
 FREEZING_RAIN_CODES = {66, 67}
 
@@ -109,16 +117,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# -------------------- CONTROLS --------------------
-c1, c2 = st.columns(2)
-with c1:
-    window_label = st.selectbox("Forecast window", list(WINDOWS.keys()), index=3)
-with c2:
-    variable = st.selectbox("Variable", list(VAR_MAP.keys()))
-HOURS = WINDOWS[window_label]
-api_var, unit, base_color, colorscale, ref_max, rgb = VAR_MAP[variable]
-
-# -------------------- FETCH --------------------
+# -------------------- FETCH (early, so recap can render under title) --------------------
 @st.cache_data(ttl=1800)
 def fetch(lat, lon):
     url = ("https://api.open-meteo.com/v1/forecast"
@@ -143,6 +142,49 @@ for m, d in data.items():
         p if c in FREEZING_RAIN_CODES else 0.0
         for c, p in zip(codes, precip)
     ]
+
+# -------------------- SNOW RECAP --------------------
+def region_snow_summary(region_name, mountain_list):
+    """Average snowfall over RECAP_HOURS for a region."""
+    per_mtn = {}
+    for m in mountain_list:
+        per_mtn[m] = sum(data[m]["hourly"]["snowfall"][:RECAP_HOURS])
+    avg = sum(per_mtn.values()) / len(per_mtn)
+    max_mtn = max(per_mtn, key=per_mtn.get)
+    max_val = per_mtn[max_mtn]
+    return avg, max_mtn, max_val
+
+recap_lines = []
+for region, mtn_list in REGIONS.items():
+    avg, top_mtn, top_val = region_snow_summary(region, mtn_list)
+    if avg < 0.5:
+        msg = "No snowfall on the forecast"
+    else:
+        msg = (f'<span class="num">{avg:.1f}</span> cm avg · '
+               f'top: {top_mtn} <span class="num">{top_val:.1f}</span> cm')
+    recap_lines.append(
+        f'<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">'
+        f'<b>{region}</b> · <span style="color:rgba(255,255,255,0.85);">{msg}</span></div>'
+    )
+
+st.markdown(
+    f'<div style="background:rgba(10,14,39,0.6);border:1px solid rgba(255,255,255,0.12);'
+    f'border-radius:10px;padding:10px 14px;margin:14px 0 6px 0;color:#FFFFFF;font-size:0.9rem;">'
+    f'<div style="font-weight:600;margin-bottom:6px;color:#4FC3F7;">'
+    f'❄️ Snow recap · next <span class="num">{RECAP_HOURS}</span> h</div>'
+    f'{"".join(recap_lines)}'
+    f'</div>',
+    unsafe_allow_html=True,
+)
+
+# -------------------- CONTROLS --------------------
+c1, c2 = st.columns(2)
+with c1:
+    window_label = st.selectbox("Forecast window", list(WINDOWS.keys()), index=3)
+with c2:
+    variable = st.selectbox("Variable", list(VAR_MAP.keys()))
+HOURS = WINDOWS[window_label]
+api_var, unit, base_color, colorscale, ref_max, rgb = VAR_MAP[variable]
 
 # -------------------- AGGREGATE --------------------
 totals = {}
