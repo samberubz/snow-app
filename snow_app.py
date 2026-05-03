@@ -106,6 +106,26 @@ st.markdown("""
     .map-legend .row:last-child { border-bottom: none; }
     .map-legend .dot { display: inline-block; width: 10px; height: 10px;
                        border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+
+    .recap-box {
+        background: rgba(10,14,39,0.6);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin: 14px 0 6px 0;
+        color: #FFFFFF;
+        font-size: 0.9rem;
+        font-family: "Josefin Sans", sans-serif !important;
+    }
+    .recap-title {
+        font-weight: 600; margin-bottom: 6px; color: #4FC3F7;
+    }
+    .recap-row {
+        padding: 4px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .recap-row:last-child { border-bottom: none; }
+    .recap-row .msg { color: rgba(255,255,255,0.85); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -163,15 +183,12 @@ for region, mtn_list in REGIONS.items():
         msg = (f'<span class="num">{avg:.1f}</span> cm avg · '
                f'top: {top_mtn} <span class="num">{top_val:.1f}</span> cm')
     recap_lines.append(
-        f'<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">'
-        f'<b>{region}</b> · <span style="color:rgba(255,255,255,0.85);">{msg}</span></div>'
+        f'<div class="recap-row"><b>{region}</b> · <span class="msg">{msg}</span></div>'
     )
 
 st.markdown(
-    f'<div style="background:rgba(10,14,39,0.6);border:1px solid rgba(255,255,255,0.12);'
-    f'border-radius:10px;padding:10px 14px;margin:14px 0 6px 0;color:#FFFFFF;font-size:0.9rem;">'
-    f'<div style="font-weight:600;margin-bottom:6px;color:#4FC3F7;">'
-    f'❄️ Snow recap · next <span class="num">{RECAP_HOURS}</span> h</div>'
+    f'<div class="recap-box">'
+    f'<div class="recap-title">❄️ Snow recap · next <span class="num">{RECAP_HOURS}</span> h</div>'
     f'{"".join(recap_lines)}'
     f'</div>',
     unsafe_allow_html=True,
