@@ -8,7 +8,6 @@ import pandas as pd
 import numpy as np
 import pydeck as pdk
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from datetime import datetime
 
 # -------------------- CONFIG --------------------
@@ -319,20 +318,15 @@ st.markdown(
 )
 st.divider()
 
-# -------------------- HOURLY CHARTS (FIXED ORDER) --------------------
+# -------------------- HOURLY CHARTS (FIXED ORDER, ONE PER ROW) --------------------
 st.markdown("### 📊 Hourly breakdown")
-fig = make_subplots(
-    rows=2, cols=3,
-    subplot_titles=[f"<b>{m}</b>" for m in MOUNTAINS.keys()],
-    vertical_spacing=0.18, horizontal_spacing=0.06,
-)
 
-for idx, m in enumerate(MOUNTAINS.keys()):
-    row, col = idx // 3 + 1, idx % 3 + 1
+for m in MOUNTAINS.keys():
     d = data[m]
     times = pd.to_datetime(d["hourly"]["time"][:HOURS])
     v = d["hourly"][api_var][:HOURS]
 
+    fig = go.Figure()
     if is_temp:
         fig.add_trace(go.Scatter(
             x=times, y=v, mode="lines+markers",
@@ -340,32 +334,33 @@ for idx, m in enumerate(MOUNTAINS.keys()):
             marker=dict(size=5), fill="tozeroy",
             fillcolor="rgba(255,107,107,0.15)",
             hovertemplate="%{x|%a %Hh}<br>%{y:.1f} °C<extra></extra>",
-        ), row=row, col=col)
+        ))
     else:
         fig.add_trace(go.Bar(
             x=times, y=v,
             marker=dict(color=v, colorscale=colorscale, line=dict(width=0)),
             hovertemplate="%{x|%a %Hh}<br>%{y:.2f} " + unit + "<extra></extra>",
-        ), row=row, col=col)
+        ))
 
-fig.update_layout(
-    height=620, showlegend=False,
-    paper_bgcolor="#0a0e27", plot_bgcolor="#0a0e27",
-    font=dict(color="#FFFFFF", family="Josefin Sans, sans-serif", size=12),
-    margin=dict(l=10, r=10, t=50, b=10),
-)
-fig.update_xaxes(
-    gridcolor="rgba(255,255,255,0.08)", tickformat="%a %Hh",
-    tickfont=dict(size=10, color="#FFFFFF", family="Ubuntu, sans-serif"),
-)
-fig.update_yaxes(
-    gridcolor="rgba(255,255,255,0.08)", title_text=unit,
-    title_font=dict(size=11, color="#FFFFFF", family="Josefin Sans, sans-serif"),
-    tickfont=dict(size=10, color="#FFFFFF", family="Ubuntu, sans-serif"),
-)
-for ann in fig["layout"]["annotations"]:
-    ann["font"] = dict(size=13, color="#FFFFFF", family="Josefin Sans, sans-serif")
+    fig.update_layout(
+        title=dict(text=f"<b>{m}</b>", x=0.02, y=0.95,
+                   font=dict(size=14, color="#FFFFFF",
+                             family="Josefin Sans, sans-serif")),
+        height=220, showlegend=False,
+        paper_bgcolor="#0a0e27", plot_bgcolor="#0a0e27",
+        font=dict(color="#FFFFFF", family="Josefin Sans, sans-serif", size=12),
+        margin=dict(l=10, r=10, t=35, b=20),
+    )
+    fig.update_xaxes(
+        gridcolor="rgba(255,255,255,0.08)", tickformat="%a %Hh",
+        tickfont=dict(size=10, color="#FFFFFF", family="Ubuntu, sans-serif"),
+    )
+    fig.update_yaxes(
+        gridcolor="rgba(255,255,255,0.08)", title_text=unit,
+        title_font=dict(size=11, color="#FFFFFF", family="Josefin Sans, sans-serif"),
+        tickfont=dict(size=10, color="#FFFFFF", family="Ubuntu, sans-serif"),
+    )
 
-st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 st.caption("Source: Open-Meteo · GFS/ICON/ECMWF blend · freezing rain from WMO codes 66/67")
