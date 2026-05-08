@@ -356,6 +356,7 @@ for m in MOUNTAINS.keys():
         gridcolor="rgba(255,255,255,0.08)", title_text=unit,
         title_font=dict(size=11, color="#FFFFFF", family="Josefin Sans, sans-serif"),
         tickfont=dict(size=10, color="#FFFFFF", family="Ubuntu, sans-serif"),
+        rangemode="tozero" if not is_temp else "normal",
     )
 
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
