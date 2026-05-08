@@ -1,6 +1,5 @@
 """
 PLAN THE POW — Quebec Ski Resort Snowfall Comparator
-Run with: streamlit run snow_app.py
 """
 import streamlit as st
 import requests
@@ -293,22 +292,20 @@ deck = pdk.Deck(
     tooltip={"text": "{name}\n{value} " + unit},
 )
 
-map_col, legend_col = st.columns([3, 1])
-with map_col:
-    st.pydeck_chart(deck, use_container_width=True, height=560)
+# Legend on top (compact), map below — stacks naturally on phone & desktop
+rgb_css = f"rgb({rgb[0]},{rgb[1]},{rgb[2]})"
+rows_html = "".join(
+    f'<div class="row"><span><span class="dot" style="background:{rgb_css}"></span>{m}</span>'
+    f'<span class="num"><b>{v:.1f}</b> {unit}</span></div>'
+    for m, v in totals.items()
+)
+st.markdown(
+    f'<div class="map-legend"><div style="font-weight:600;margin-bottom:6px;">'
+    f'{variable}</div>{rows_html}</div>',
+    unsafe_allow_html=True,
+)
 
-with legend_col:
-    rgb_css = f"rgb({rgb[0]},{rgb[1]},{rgb[2]})"
-    rows_html = "".join(
-        f'<div class="row"><span><span class="dot" style="background:{rgb_css}"></span>{m}</span>'
-        f'<span class="num"><b>{v:.1f}</b> {unit}</span></div>'
-        for m, v in totals.items()
-    )
-    st.markdown(
-        f'<div class="map-legend"><div style="font-weight:600;margin-bottom:6px;">'
-        f'{variable}</div>{rows_html}</div>',
-        unsafe_allow_html=True,
-    )
+st.pydeck_chart(deck, use_container_width=True, height=460)
 
 st.markdown(
     f'<div style="color:rgba(255,255,255,0.55);font-size:0.8rem;margin-top:6px;">'
@@ -319,7 +316,7 @@ st.markdown(
 st.divider()
 
 # -------------------- HOURLY CHARTS (FIXED ORDER, ONE PER ROW) --------------------
-st.markdown("### 📊 Hourly breakdown")
+st.markdown("### Hourly Breakdown")
 
 for m in MOUNTAINS.keys():
     d = data[m]
